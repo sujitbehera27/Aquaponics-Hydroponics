@@ -1,0 +1,121 @@
+/* How to use DHT-11 sensor with Arduino uno
+   Temperature and humidity sensor
+   Dev: Michalis Vasilakis // Date: 1/7/2015 // www.ardumotive.com */
+
+//Libraries
+#include <DHT.h>
+
+//Constants
+#define DHTPIN 2     // what pin we're connected to
+#define DHTTYPE DHT11   // DHT 11  (AM2302)
+// Initialize DHT sensor for normal 16mhz Arduino
+DHT dht(DHTPIN, DHTTYPE);
+
+//#define DHT11PIN 2
+
+//Variables
+int chk;
+double hum;  //Stores humidity value
+double temp; //Stores temperature value
+
+
+
+
+void setup()
+{
+    Serial.begin(9600);
+	dht.begin();
+    
+}
+
+void loop()
+{
+	//Read data and store it to variables hum and temp
+	 temp = dht.readTemperature();
+  		hum = dht.readHumidity();
+  
+    
+
+      Serial.print("Humidity: ");
+      Serial.print(hum);
+      Serial.print(" %, Temp: ");
+      Serial.print(temp);
+//    Serial.println(" Celsius");
+//    delay(2000); //Delay 2 sec.
+
+Serial.println("\n");
+
+//  int chk = dht.read(DHTTYPE);
+
+  Serial.print("Read sensor: ");
+//  switch (chk)
+//  {
+//    case 0: Serial.println("OK"); break;
+//    case -1: Serial.println("Checksum error"); break;
+//    case -2: Serial.println("Time out error"); break;
+//    default: Serial.println("Unknown error"); break;
+//  }
+
+  
+ 
+  
+  Serial.print("Humidity (%): ");
+  Serial.println((float)hum, 2);
+
+  Serial.print("Temperature (oC): ");
+  Serial.println((float)temp, 2);
+
+  Serial.print("Temperature (oF): ");
+  Serial.println(Fahrenheit(temp), 2);
+
+  Serial.print("Temperature (K): ");
+  Serial.println(Kelvin(temp), 2);
+
+  Serial.print("Dew Point (oC): ");
+  Serial.println(dewPoint(temp, hum));
+
+  Serial.print("Dew PointFast (oC): ");
+  Serial.println(dewPointFast(temp, hum));
+
+  delay(2000);
+}
+//Celsius to Fahrenheit conversion
+double Fahrenheit(double temp)
+{
+	return 1.8 * temp + 32;
+}
+
+//Celsius to Kelvin conversion
+double Kelvin(double temp)
+{
+	return temp + 273.15;
+}
+
+// dewPoint function NOAA
+// reference: http://wahiduddin.net/calc/density_algorithms.htm 
+double dewPoint(double temp, double hum)
+{
+	double A0= 373.15/(273.15 + temp);
+	double SUM = -7.90298 * (A0-1);
+	SUM += 5.02808 * log10(A0);
+	SUM += -1.3816e-7 * (pow(10, (11.344*(1-1/A0)))-1) ;
+	SUM += 8.1328e-3 * (pow(10,(-3.49149*(A0-1)))-1) ;
+	SUM += log10(1013.246);
+	double VP = pow(10, SUM-3) * hum;
+	double T = log(VP/0.61078);   // temp var
+	return (241.88 * T) / (17.558-T);
+}
+
+// delta max = 0.6544 wrt dewPoint()
+// 5x faster than dewPoint()
+// reference: http://en.wikipedia.org/wiki/Dew_point
+double dewPointFast(double temp1, double hum1)
+{
+	double a = 17.271;
+	double b = 237.7;
+	double temp = (a * temp1) / (b + temp) + log(hum1/100);
+	double Td = (b * temp1) / (a - temp1);
+	return Td;
+}
+
+   
